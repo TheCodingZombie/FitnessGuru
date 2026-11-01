@@ -19,7 +19,10 @@ import java.util.List;
 
 public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.WorkoutViewHolder> {
 
-    public interface Click { void open(Workout w, View shared); }
+    public interface Click {
+        void open(Workout w, View shared);
+        void delete(Workout w, WorkoutViewHolder v);
+    }
     private final Context context;
     private final Click click;
     private List<Workout> workouts = new ArrayList<>();
@@ -48,6 +51,19 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.WorkoutV
         holder.title.setText(w.name + " on " + new Date(w.timeStarted / 1000L));
 
         holder.expandButton.setOnClickListener(v->click.open(w,holder.itemView));
+        holder.deleteButton.setOnClickListener(v->click.delete(w,holder));
+
+        StringBuilder string = new StringBuilder();
+
+        for (Exercise e: w.exerciseList){
+            string.append(e.exerciseName + "\n");
+            for (Exercise.Set s: e.sets) {
+                string.append("\t * " + s.weight + " lbs x " + s.reps + " reps\n");
+            }
+            string.append("\n\n");
+        }
+
+        holder.exerciseList.setText(string.toString());
     }
 
     @Override
@@ -58,14 +74,18 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.WorkoutV
     // Inner ViewHolder class:
     // Holds references to the cover ImageView and title TextView.
     static class WorkoutViewHolder extends RecyclerView.ViewHolder {
-        TextView title;
+        TextView title, exerciseList;
 
         ImageButton expandButton;
+
+        Button deleteButton;
 
         WorkoutViewHolder(View v){
             super(v);
             title = v.findViewById(R.id.workoutTitle);
             expandButton = v.findViewById(R.id.expandButton);
+            deleteButton = v.findViewById(R.id.deleteWorkout);
+            exerciseList = v.findViewById(R.id.workoutList);
         }
     }
 }

@@ -31,6 +31,12 @@ public class Exercise {
         }
     }
 
+    public Exercise () {}
+
+    public Exercise (String name) {
+        exerciseName = name;
+    }
+
     public List<Set> sets = new ArrayList<>();
 
     public void addSet(float weight, int reps) {
@@ -41,6 +47,9 @@ public class Exercise {
         sets.add(s);
     }
 
+    public int getSetIndex(Set s) {
+        return sets.indexOf(s);
+    }
 
     public void modifySet(int index, Float weight, Integer reps) {
         Set set = sets.get(index);
@@ -53,12 +62,15 @@ public class Exercise {
     }
 
     public void popSet() {
+        if (sets.isEmpty()) return;
         sets.removeLast();
     }
 
     public void removeSet(int index){
         sets.remove(index);
     }
+
+    public void removeSet(Set s) { sets.remove(s); }
 
     // convert this instance's details to a JSON String
     public String detailsToJSON() {

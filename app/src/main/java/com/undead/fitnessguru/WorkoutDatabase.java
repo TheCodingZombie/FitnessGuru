@@ -11,6 +11,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -59,6 +60,7 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
             );
 
             if (updated > 0) {
+                Log.d("Database", "Successfully updated workout of id " + updated + ".");
                 return w.id;
             }
         }
@@ -67,23 +69,27 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
         if (id > 0) {
             w.id = id;
         }
+
+        Log.d("Database", "Successfully stored workout of id " + id + ".");
         return id;
     }
 
     private void jsonToList (JSONArray list, List<Exercise> output) {
         if (list == null) return;
 
+
         for (int i = 0; i < list.length(); i++){
             Object item = list.opt(i);
 
             if (item != null && item != JSONObject.NULL){
                 Exercise res = new Exercise();
-                JSONObject e = (JSONObject) item;
-
-                res.exerciseName = e.optString("name");
-
-                JSONArray sets = e.optJSONArray("sets");
                 try {
+                    JSONObject e = new JSONObject(item.toString());
+
+                    res.exerciseName = e.optString("name");
+
+                    JSONArray sets = e.optJSONArray("sets");
+
                     for (int j = 0; j < sets.length(); j++) {
                         Exercise.Set s = new Exercise.Set();
                         JSONObject o = sets.optJSONObject(j);
@@ -123,11 +129,13 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
 
         if (json != null && !json.isEmpty()) {
             try {
+                Log.d("json", json);
+
                 JSONArray eList = new JSONArray(json);
 
                 jsonToList(eList, w.exerciseList);
             } catch (Exception e) {
-                Log.e("WorkoutDatabase", "Could not parse details for workout " + w.id);
+                Log.e("WorkoutDatabase", "Could not parse details for workout " + w.id + "\n with the following error: " + e.toString());
             }
         }
 
@@ -162,5 +170,30 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
         }
 
         return results;
+    }
+
+    public ArrayList<Workout> getAll() {
+        ArrayList<Workout> results = new ArrayList<>();
+
+        try (Cursor cursor = getReadableDatabase().rawQuery(
+                "SELECT * FROM workouts", new String[]{} )) {
+
+            while(cursor.moveToNext()){
+                results.add(read(cursor));
+            }
+        }
+
+        results.sort((o1, o2) -> Long.compare(o2.timeStarted, o1.timeStarted));
+
+        return results;
+    }
+
+    // delete a workout from the database
+    public void delete(long id) {
+        getWritableDatabase().delete(
+                "workouts",
+                "id=?",
+                new String[]{ String.valueOf(id) }
+        );
     }
 }

@@ -1,5 +1,6 @@
 package com.undead.fitnessguru;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -13,11 +14,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class MainActivity extends AppCompatActivity {
+public class WorkoutActivity extends AppCompatActivity {
 
     WorkoutDatabase db;
 
@@ -42,16 +42,31 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView list = findViewById(R.id.workoutList);
         list.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
-        adapter = new WorkoutAdapter(this, (w, shared)-> {
-            View listView = shared.findViewById(R.id.workoutListView);
+        adapter = new WorkoutAdapter(this, new WorkoutAdapter.Click() {
+            @Override
+            public void open(Workout w, View shared) {
+                View listView = shared.findViewById(R.id.workoutListView);
 
-            listView.setVisibility(listView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE );
+                listView.setVisibility(listView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE );
 
-            ImageButton expandButton = shared.findViewById(R.id.expandButton);
+                ImageButton expandButton = shared.findViewById(R.id.expandButton);
 
-            expandButton.setRotation(listView.getVisibility() == View.VISIBLE ? 0 : 180 );
+                expandButton.setRotation(listView.getVisibility() == View.VISIBLE ? 0 : 180 );
+            }
 
-        });
+            @Override
+            public void delete(Workout w, WorkoutAdapter.WorkoutViewHolder v) {
+                new AlertDialog.Builder(WorkoutActivity.this)
+                        .setTitle("Delete workout??")
+                        .setMessage("This permanently deletes " + w.name + ".")
+                        .setNegativeButton("Cancel", null)
+                        .setPositiveButton("Delete", (d, x) -> {
+                                    db.delete(w.id);
+                                    refresh();
+                                }
+                        ).show();
+            }
+    });
         list.setAdapter(adapter);
 
         search.addTextChangedListener(
@@ -67,12 +82,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.clearSearch).setOnClickListener(v->search.setText(""));
 
         findViewById(R.id.newWorkout).setOnClickListener(v-> {
-            Workout w = new Workout();
-            w.name = "New Workout";
-
-            db.saveWorkoutToDatabase(w);
-
-            refresh();
+            startActivity(new Intent(this, WorkoutEditActivity.class));
         });
     }
 
@@ -84,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
     void refresh(){
         if (adapter==null) return;
 
-        adapter.setWorkouts(db.search(search.getText().toString()));
+        adapter.setWorkouts(db.getAll());
         findViewById(R.id.emptyMessage).setVisibility(adapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
     }
 }

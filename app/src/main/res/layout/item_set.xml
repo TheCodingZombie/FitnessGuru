@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:id="@+id/setContent"
+    android:transitionName="workoutCard"
+    android:padding="10dp"
+    android:layout_margin="6dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageButton
+        android:id="@+id/deleteSet"
+        android:contentDescription="deleteSet"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:background="#ff0000"
+        android:minWidth="36dp"
+        android:minHeight="36dp"
+        android:layout_width="36dp"
+        android:layout_marginRight="4dp"
+        android:layout_height="match_parent"
+        android:backgroundTint="#FF0000"/>
+
+    <TextView
+        android:id="@+id/numberOfSet"
+        android:text="1."
+        android:layout_marginTop="10dp"
+        android:textStyle="bold"
+        android:textSize="24sp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:paddingTop="8dp"
+        android:layout_width="0dp"
+        android:layout_weight="0.1"
+        android:layout_height="match_parent" />
+
+    <EditText
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.35"
+        android:hint="Weight..."
+        android:id="@+id/weightInput"/>
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.1"
+        android:textAlignment="center"
+        android:text="(lbs)"
+        android:paddingTop="16dp"/>
+
+    <ImageView
+        android:id="@+id/clearSearch"
+        android:contentDescription="Clear search"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:minWidth="24dp"
+        android:minHeight="24dp"
+        android:layout_width="24dp"
+        android:layout_height="match_parent"
+        android:backgroundTint="#FF0000"/>
+
+    <EditText
+        android:layout_width="0dp"
+        android:id="@+id/repsInput"
+        android:layout_height="match_parent"
+        android:layout_weight="0.35"
+        android:hint="Reps..."/>
+
+</LinearLayout>
