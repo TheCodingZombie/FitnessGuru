@@ -2,6 +2,7 @@ package com.undead.fitnessguru;
 
 import android.content.Context;
 import android.net.Uri;
+import android.opengl.Visibility;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -58,6 +59,8 @@ public class ExerciseAdapter extends RecyclerView.Adapter<ExerciseAdapter.SetVie
             SetViewHolder holder, int position
     ){
         Exercise.Set s = sets.get(position);
+
+        holder.copy.setVisibility(sets.getLast() == s ? View.VISIBLE : View.GONE);
 
         if (s.weight != -99) holder.weight.setText(Float.toString(s.weight));
         if (s.reps != -99) holder.reps.setText(Integer.toString(s.reps));
