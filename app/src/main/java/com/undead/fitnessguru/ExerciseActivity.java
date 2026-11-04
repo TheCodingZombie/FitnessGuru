@@ -53,6 +53,8 @@ public class ExerciseActivity extends AppCompatActivity {
                 ImageButton expandButton = shared.findViewById(R.id.expandButton);
 
                 expandButton.setRotation(listView.getVisibility() == View.VISIBLE ? 0 : 180 );
+
+
             }
     });
         list.setAdapter(adapter);

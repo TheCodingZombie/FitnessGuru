@@ -138,5 +138,13 @@ public class ExerciseHistory {
         return values;
     }
 
+    public float getBestSet() {
+        float res = -999;
 
+        for (SetHistory sh: setHistoryList){
+            if (sh.bestWeight > res) res = sh.bestWeight;
+        }
+
+        return res;
+    }
 }

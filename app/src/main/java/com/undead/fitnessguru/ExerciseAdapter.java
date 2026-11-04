@@ -28,6 +28,8 @@ public class ExerciseAdapter extends RecyclerView.Adapter<ExerciseAdapter.SetVie
 
         void repsChanged(Exercise.Set s, String text);
         void delete(Exercise.Set s);
+
+        void copy(Exercise.Set s);
     }
 
     private final Context context;
@@ -57,8 +59,14 @@ public class ExerciseAdapter extends RecyclerView.Adapter<ExerciseAdapter.SetVie
     ){
         Exercise.Set s = sets.get(position);
 
+        if (s.weight != -99) holder.weight.setText(Float.toString(s.weight));
+        if (s.reps != -99) holder.reps.setText(Integer.toString(s.reps));
+
         holder.index.setText((position + 1) + ". ");
         holder.delete.setOnClickListener(v->click.delete(s));
+
+        holder.copy.setOnClickListener(v->click.copy(s));
+
         holder.weight.addTextChangedListener(
                 new TextWatcher(){
                      public void beforeTextChanged(CharSequence s,int st,int c,int a){}
@@ -99,7 +107,7 @@ public class ExerciseAdapter extends RecyclerView.Adapter<ExerciseAdapter.SetVie
     static class SetViewHolder extends RecyclerView.ViewHolder {
         TextView index;
 
-        ImageButton delete;
+        ImageButton delete, copy;
 
         EditText weight, reps;
 
@@ -107,6 +115,7 @@ public class ExerciseAdapter extends RecyclerView.Adapter<ExerciseAdapter.SetVie
             super(v);
             index = v.findViewById(R.id.numberOfSet);
             delete = v.findViewById(R.id.deleteSet);
+            copy = v.findViewById(R.id.copySet);
             weight = v.findViewById(R.id.weightInput);
             reps = v.findViewById(R.id.repsInput);
         }

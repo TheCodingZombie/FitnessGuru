@@ -24,12 +24,22 @@ public class Exercise {
 
         public int reps;
 
-        public Set() {}
+        public Set() {
+            weight = -99;
+            unit = "lbs";
+            reps = -99;
+        }
 
         public Set(float w, int r){
             weight = w;
             unit = "lbs";
             reps = r;
+        }
+
+        public Set(Set other){
+            weight = other.weight;
+            unit = "lbs";
+            reps = other.reps;
         }
     }
 

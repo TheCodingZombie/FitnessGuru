@@ -17,9 +17,9 @@ Package: `com.undead.fitnessguru`.
   - This screen allows you to search your workouts and start a new one.
 - See the history of individual exercises you've done and your trajectory through each one
   - This stores the PB of each individual workout and plots them on a graph so you can see how well you've done over time
+- You can also add a copy of the bottom set to the bottom.
 
 ## Feature Plans
-- You can also add a copy of the bottom set to the bottom.
 - Workouts also have a total time (basically time elapsed since the start time)
 - Measurements Screen (allows you to note your measurements and then see a history of each body part)
 - Name workouts and exercises

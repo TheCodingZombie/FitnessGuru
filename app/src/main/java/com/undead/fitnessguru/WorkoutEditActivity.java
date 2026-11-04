@@ -193,6 +193,12 @@ public class WorkoutEditActivity extends FragmentActivity {
                         exercise.removeSet(s);
                         refreshSets();
                     }
+
+                    @Override
+                    public void copy(Exercise.Set s) {
+                        exercise.addSet(new Exercise.Set(s));
+                        refreshSets();
+                    }
                 });
                 setList.setAdapter(adapter);
 
@@ -210,7 +216,6 @@ public class WorkoutEditActivity extends FragmentActivity {
                     w.exerciseList.remove(exercise);
                     refresh();
                 });
-
             }
 
             private void refreshSets() {
