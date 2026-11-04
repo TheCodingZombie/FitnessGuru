@@ -8,15 +8,19 @@ A simple app for tracking your progress and taking note of your goals.
 
 Package: `com.undead.fitnessguru`.
 
-## Feature Plans
+## Current Features
 - Start a workout, allowing you to add exercises.
   - Exercises have a name and a list of sets.
     - Sets each have a weight, a unit, and a rep count. (Maybe eventually add a timer)
     - You can remove a set from the bottom of the list or add a set to the bottom.
-    - You can also add a copy of the bottom set to the bottom.
-  - Workouts also have a total time (basically time elapsed since the start time)
-- The following screens:
-  - Workout history
-  - Workout screen (allowing you to edit the current workout. Does not allow editing of previous workouts)
-  - Exercise history (allows you to see the history of each named exercise with how much weight you can do for each)
-  - Measurements (allows you to note your measurements and then see a history of each body part)
+- See the history of when you've done workouts, as well as what you did during that workout
+  - This screen allows you to search your workouts and start a new one.
+- See the history of individual exercises you've done and your trajectory through each one
+  - This stores the PB of each individual workout and plots them on a graph so you can see how well you've done over time
+
+## Feature Plans
+- You can also add a copy of the bottom set to the bottom.
+- Workouts also have a total time (basically time elapsed since the start time)
+- Measurements Screen (allows you to note your measurements and then see a history of each body part)
+- Name workouts and exercises
+- Create a preset workout, allowing you to have a bunch of exercises ready for you to fill out.
