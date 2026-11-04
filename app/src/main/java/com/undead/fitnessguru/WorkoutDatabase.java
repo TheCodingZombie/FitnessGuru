@@ -10,6 +10,7 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.Locale;
 public class WorkoutDatabase extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "workouts.db";
-    private static final int DB_VERSION = 2;
+    private static final int DB_VERSION = 4;
 
     public WorkoutDatabase(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -34,12 +35,47 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
                         "totalTime INTEGER DEFAULT 0, " +
                         "exerciseList TEXT)"
         );
+
+        db.execSQL(
+                "CREATE TABLE exercises (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        "name TEXT, " +
+                        "details_json TEXT )"
+        );
     }
 
     @Override
     public void onUpgrade(
             SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (newVersion == 2 && oldVersion == 1){
+        if (newVersion >= 4 && oldVersion == 3) {
+            db.execSQL(
+                    "ALTER TABLE exercises " +
+                            "DROP COLUMN personalBestWeight;"
+            );
+
+            db.execSQL(
+                    "ALTER TABLE exercises " +
+                            "DROP COLUMN personalBestReps;"
+            );
+
+            db.execSQL(
+                    "ALTER TABLE exercises " +
+                            "ADD details_json TEXT;"
+            );
+        }
+
+
+        if (newVersion >= 3 && oldVersion <= 2) {
+            db.execSQL(
+                "CREATE TABLE exercises (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "name TEXT, " +
+                "personalBestWeight INTEGER DEFAULT 0, " +
+                "personalBestReps INTEGER DEFAULT 0)"
+            );
+        }
+
+        if (newVersion >= 2 && oldVersion == 1){
             db.execSQL(
                     "ALTER TABLE workouts " +
                             "ADD name TEXT;"
@@ -72,6 +108,63 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
 
         Log.d("Database", "Successfully stored workout of id " + id + ".");
         return id;
+    }
+
+    public long updateExerciseInDatabase (Exercise e, long timeStarted) {
+        // first, check if this exercise is already in the database
+        ExerciseHistory eh = null;
+
+        try (Cursor cursor = getReadableDatabase().rawQuery(
+                "SELECT * FROM exercises WHERE id=?",
+                new String[]{String.valueOf(e.id)})) {
+
+            eh = cursor.moveToFirst() ? readExerciseHistory(cursor) : null;
+        }
+        catch (Exception ignored) {
+
+        }
+
+        if (eh == null){
+            eh = getFirstExerciseOfName(e.exerciseName);
+        }
+
+        SQLiteDatabase db = getWritableDatabase();
+
+        if (eh == null){
+            // the check failed, assume we don't have anything in the database
+            // and add this exercise to the database instead
+            eh = new ExerciseHistory(e, timeStarted);
+
+            long id = db.insert("exercises", null, eh.values());
+            if (id > 0) {
+                eh.id = id;
+                e.id = id;
+            }
+
+            Log.d("Database", "Successfully stored exercise of id " + id + ".");
+            return id;
+        }
+        else {
+            e.id = eh.id;
+
+            eh.addNewExerciseToHistory(e, timeStarted);
+            Log.d("ExerciseHistory", eh.listToJSON().toString());
+
+            int updated = db.update(
+                    "exercises",
+                    eh.values(),
+                    "id=?",
+                    new String[]{String.valueOf(eh.id)}
+            );
+
+            if (updated > 0) {
+                Log.d("Database", "Successfully updated exercise of id " + updated + ".");
+                return eh.id;
+            }
+
+            // we didn't change the exercise, as it wasn't found.
+            return -1;
+        }
     }
 
     private void jsonToList (JSONArray list, List<Exercise> output) {
@@ -129,8 +222,6 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
 
         if (json != null && !json.isEmpty()) {
             try {
-                Log.d("json", json);
-
                 JSONArray eList = new JSONArray(json);
 
                 jsonToList(eList, w.exerciseList);
@@ -142,9 +233,24 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
         return w;
     }
 
+    private ExerciseHistory readExerciseHistory(Cursor cursor) {
+        ExerciseHistory eh = new ExerciseHistory();
+
+        eh.id = cursor.getLong(
+                cursor.getColumnIndexOrThrow("id"));
+        eh.name = cursor.getString(
+                cursor.getColumnIndexOrThrow("name"));
+
+        String json = cursor.getString(
+                cursor.getColumnIndexOrThrow("details_json"));
+        eh.setSetHistoryList(json);
+
+        return eh;
+    }
+
     public Workout get(long id) {
         try (Cursor cursor = getReadableDatabase().rawQuery(
-                "SELECT * FROM workouts WHERE _id=?",
+                "SELECT * FROM workouts WHERE id=?",
                 new String[]{String.valueOf(id)})) {
 
             return cursor.moveToFirst() ? read(cursor) : null;
@@ -172,6 +278,26 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
         return results;
     }
 
+    public ExerciseHistory getFirstExerciseOfName(String query) {
+        String search = query == null
+                ? ""
+                : query.toLowerCase(Locale.ROOT);
+
+        try (Cursor cursor = getReadableDatabase().rawQuery(
+                "SELECT * FROM exercises " +
+                        "WHERE lower(name) LIKE ? " +
+                        "ORDER BY name COLLATE NOCASE",
+                new String[]{"%" + search + "%"})) {
+
+            return cursor.moveToFirst() ? readExerciseHistory(cursor) : null;
+        }
+        catch (Exception ignored) {
+
+        }
+
+        return null;
+    }
+
     public ArrayList<Workout> getAll() {
         ArrayList<Workout> results = new ArrayList<>();
 
@@ -184,6 +310,20 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
         }
 
         results.sort((o1, o2) -> Long.compare(o2.timeStarted, o1.timeStarted));
+
+        return results;
+    }
+
+    public ArrayList<ExerciseHistory> getAllExercises() {
+        ArrayList<ExerciseHistory> results = new ArrayList<>();
+
+        try (Cursor cursor = getReadableDatabase().rawQuery(
+                "SELECT * FROM exercises", new String[]{} )) {
+
+            while(cursor.moveToNext()){
+                results.add(readExerciseHistory(cursor));
+            }
+        }
 
         return results;
     }

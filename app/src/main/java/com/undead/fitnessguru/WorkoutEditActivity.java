@@ -78,10 +78,7 @@ public class WorkoutEditActivity extends FragmentActivity {
                     .setMessage("This will save your workout to the database, with all of the exercises you have currently done.")
                     .setNegativeButton("No", null)
                     .setPositiveButton("Yes", (d, x) -> {
-                                w.name = "Workout";
-                                w.exerciseList = pagerAdapter.exercises;
-
-                                db.saveWorkoutToDatabase(w);
+                                saveWorkout();
                                 Intent i = new Intent(this, WorkoutActivity.class);
                                 startActivity(i);
                             }
@@ -106,6 +103,18 @@ public class WorkoutEditActivity extends FragmentActivity {
 
         pagerAdapter.setExercises(w.exerciseList);
         viewPager.setCurrentItem(pagerAdapter.getItemCount() - 1);
+    }
+
+    private void saveWorkout() {
+        w.name = "Workout"; // this probably will be changeable in the full app
+        w.exerciseList = pagerAdapter.exercises;
+
+        db.saveWorkoutToDatabase(w);
+
+        // update all personal bests
+        for (Exercise e : w.exerciseList){
+            db.updateExerciseInDatabase(e, w.timeStarted);
+        }
     }
 
     public class WorkoutPagerAdapter extends RecyclerView.Adapter<WorkoutPagerAdapter.PageHolder> {

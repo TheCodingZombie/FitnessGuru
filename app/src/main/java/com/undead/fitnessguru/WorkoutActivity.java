@@ -84,6 +84,10 @@ public class WorkoutActivity extends AppCompatActivity {
         findViewById(R.id.newWorkout).setOnClickListener(v-> {
             startActivity(new Intent(this, WorkoutEditActivity.class));
         });
+
+        findViewById(R.id.goToExerciseHistory).setOnClickListener(v-> {
+            startActivity(new Intent(this, ExerciseActivity.class));
+        });
     }
 
     @Override protected void onResume(){

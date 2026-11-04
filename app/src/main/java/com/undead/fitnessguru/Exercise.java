@@ -1,5 +1,7 @@
 package com.undead.fitnessguru;
 
+import android.content.ContentValues;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -87,12 +89,32 @@ public class Exercise {
             }
 
             details.put("name", exerciseName);
+            details.put("id", id);
             details.put("sets", setJson);
         }
         catch (Exception ignored){
         }
 
         return details.toString();
+    }
+
+    public ContentValues values() {
+        ContentValues values = new ContentValues();
+        try {
+            JSONArray setJson = new JSONArray();
+            for (Set set : sets) {
+                JSONObject s = new JSONObject();
+                s.put("weight", set.weight);
+                s.put("reps", set.reps);
+                s.put("unit", set.unit);
+                setJson.put(s);
+            }
+        }
+        catch (Exception ignored) {}
+
+        values.put("name", exerciseName);
+
+        return values;
     }
 
 }
