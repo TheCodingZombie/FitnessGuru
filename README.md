@@ -13,6 +13,8 @@ Package: `com.undead.fitnessguru`.
   - Exercises have a name and a list of sets.
     - Sets each have a weight, a unit, and a rep count. (Maybe eventually add a timer)
     - You can remove a set from the bottom of the list or add a set to the bottom.
+  - Workouts also have a total time (basically time elapsed since the start time)
+    - This is displayed in the stopwatch at the top left.
 - See the history of when you've done workouts, as well as what you did during that workout
   - This screen allows you to search your workouts and start a new one.
 - See the history of individual exercises you've done and your trajectory through each one
@@ -20,7 +22,6 @@ Package: `com.undead.fitnessguru`.
 - You can also add a copy of the bottom set to the bottom.
 
 ## Feature Plans
-- Workouts also have a total time (basically time elapsed since the start time)
 - Measurements Screen (allows you to note your measurements and then see a history of each body part)
 - Name workouts and exercises
 - Create a preset workout, allowing you to have a bunch of exercises ready for you to fill out.

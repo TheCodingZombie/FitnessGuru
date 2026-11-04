@@ -14,7 +14,16 @@
         android:textStyle="bold"
         android:textColor="#A87836"
         android:paddingTop="8dp"
-        android:paddingBottom="12dp"
+        android:paddingBottom="4dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:id="@+id/timer"
+        android:text="Timer"
+        android:textSize="12sp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 

@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.WorkoutViewHolder> {
 
@@ -53,7 +54,17 @@ public class WorkoutAdapter extends RecyclerView.Adapter<WorkoutAdapter.WorkoutV
         holder.expandButton.setOnClickListener(v->click.open(w,holder.itemView));
         holder.deleteButton.setOnClickListener(v->click.delete(w,holder));
 
-        StringBuilder string = new StringBuilder();
+        long seconds = w.totalTime;
+
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs = seconds % 60;
+
+        String time = String.format(Locale.getDefault(),
+                "%dh:%02dm:%02ds long workout.\n", hours,
+                minutes, secs);
+
+        StringBuilder string = new StringBuilder(time);
 
         for (Exercise e: w.exerciseList){
             string.append(e.exerciseName + "\n");

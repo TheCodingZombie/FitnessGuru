@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +25,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class WorkoutEditActivity extends FragmentActivity {
 
@@ -33,6 +35,10 @@ public class WorkoutEditActivity extends FragmentActivity {
     private ViewPager2 viewPager;
 
     private WorkoutPagerAdapter pagerAdapter;
+
+    private long seconds = 0;
+
+    private boolean running, wasRunning;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +53,24 @@ public class WorkoutEditActivity extends FragmentActivity {
 
         w = new Workout();
         db = new WorkoutDatabase(this);
+
+        if (savedInstanceState != null) {
+
+            // Get the previous state of the timer
+            // if the activity has been
+            // destroyed and recreated.
+            seconds
+                    = savedInstanceState
+                    .getLong("seconds");
+            running
+                    = savedInstanceState
+                    .getBoolean("running");
+            wasRunning
+                    = savedInstanceState
+                    .getBoolean("wasRunning");
+        }
+        running = true;
+        runTimer();
 
         // Instantiate a ViewPager2 and a PagerAdapter.
         viewPager = findViewById(R.id.exercisePager);
@@ -87,6 +111,19 @@ public class WorkoutEditActivity extends FragmentActivity {
     }
 
     @Override
+    public void onSaveInstanceState(
+            Bundle savedInstanceState)
+    {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState
+                .putLong("seconds", seconds);
+        savedInstanceState
+                .putBoolean("running", running);
+        savedInstanceState
+                .putBoolean("wasRunning", wasRunning);
+    }
+
+    @Override
     public void onBackPressed() {
         if (viewPager.getCurrentItem() == 0) {
             // If the user is currently looking at the first step, allow the system to handle the
@@ -98,6 +135,26 @@ public class WorkoutEditActivity extends FragmentActivity {
         }
     }
 
+    @Override
+    protected void onPause()
+    {
+        super.onPause();
+        wasRunning = running;
+        running = false;
+    }
+
+    // If the activity is resumed,
+    // start the stopwatch
+    // again if it was running previously.
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        if (wasRunning) {
+            running = true;
+        }
+    }
+
     private void refresh() {
         if (pagerAdapter==null) return;
 
@@ -106,7 +163,9 @@ public class WorkoutEditActivity extends FragmentActivity {
     }
 
     private void saveWorkout() {
-        w.name = "Workout"; // this probably will be changeable in the full app
+        w.name = "Workout"; // this probably will be editable in the full app
+        w.totalTime = seconds; // how long the workout took.
+
         w.exerciseList = pagerAdapter.exercises;
 
         db.saveWorkoutToDatabase(w);
@@ -115,6 +174,49 @@ public class WorkoutEditActivity extends FragmentActivity {
         for (Exercise e : w.exerciseList){
             db.updateExerciseInDatabase(e, w.timeStarted);
         }
+    }
+
+    private void runTimer()
+    {
+        final TextView timeView = (TextView)findViewById(R.id.timer);
+
+        final Handler handler = new Handler();
+
+        // Call the post() method,
+        // passing in a new Runnable.
+        // The post() method processes
+        // code without a delay,
+        // so the code in the Runnable
+        // will run almost immediately.
+        handler.post(new Runnable() {
+            @Override
+
+            public void run()
+            {
+                long hours = seconds / 3600;
+                long minutes = (seconds % 3600) / 60;
+                long secs = seconds % 60;
+
+                // Format the seconds into hours, minutes,
+                // and seconds.
+                String time = String.format(Locale.getDefault(),
+                                "%d:%02d:%02d", hours,
+                                minutes, secs);
+
+                // Set the text view text.
+                timeView.setText(time);
+
+                // If running is true, increment the
+                // seconds variable.
+                if (running) {
+                    seconds++;
+                }
+
+                // Post the code again
+                // with a delay of 1 second.
+                handler.postDelayed(this, 1000);
+            }
+        });
     }
 
     public class WorkoutPagerAdapter extends RecyclerView.Adapter<WorkoutPagerAdapter.PageHolder> {
