@@ -70,12 +70,30 @@
         android:layout_height="0dp"
         android:layout_weight="1"/>
 
-    <Button
-        android:id="@+id/goToExerciseHistory"
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="48dp"
-        android:text="Go To Exercise History"
-        android:layout_margin="4dp"/>
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/goToExerciseHistory"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="Go To Exercise History"
+            android:layout_margin="4dp"/>
+
+        <Button
+            android:id="@+id/goToMeasurements"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="Go To Measurements"
+            android:layout_margin="4dp"/>
+
+    </LinearLayout>
 
 </LinearLayout>

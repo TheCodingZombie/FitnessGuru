@@ -19,7 +19,7 @@ import java.util.Locale;
 public class WorkoutDatabase extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "workouts.db";
-    private static final int DB_VERSION = 4;
+    private static final int DB_VERSION = 5;
 
     public WorkoutDatabase(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -42,11 +42,37 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
                         "name TEXT, " +
                         "details_json TEXT )"
         );
+
+        db.execSQL(
+                "CREATE TABLE measurements (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        "bodyPart TEXT, " +
+                        "unit TEXT, " +
+                        "measurement DOUBLE, " +
+                        "timeTaken INTEGER)"
+        );
     }
 
     @Override
     public void onUpgrade(
             SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (newVersion >= 2 && oldVersion == 1){
+            db.execSQL(
+                    "ALTER TABLE workouts " +
+                            "ADD name TEXT;"
+            );
+        }
+
+        if (newVersion >= 3 && oldVersion <= 2) {
+            db.execSQL(
+                "CREATE TABLE exercises (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "name TEXT, " +
+                "personalBestWeight INTEGER DEFAULT 0, " +
+                "personalBestReps INTEGER DEFAULT 0)"
+            );
+        }
+
         if (newVersion >= 4 && oldVersion == 3) {
             db.execSQL(
                     "ALTER TABLE exercises " +
@@ -64,23 +90,17 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
             );
         }
 
-
-        if (newVersion >= 3 && oldVersion <= 2) {
+        if (newVersion >= 5 && oldVersion <= 4){
             db.execSQL(
-                "CREATE TABLE exercises (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "name TEXT, " +
-                "personalBestWeight INTEGER DEFAULT 0, " +
-                "personalBestReps INTEGER DEFAULT 0)"
+                    "CREATE TABLE measurements (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            "bodyPart TEXT, " +
+                            "unit TEXT, " +
+                            "measurement DOUBLE, " +
+                            "timeTaken INTEGER)"
             );
         }
 
-        if (newVersion >= 2 && oldVersion == 1){
-            db.execSQL(
-                    "ALTER TABLE workouts " +
-                            "ADD name TEXT;"
-            );
-        }
     }
 
     public long saveWorkoutToDatabase (Workout w){
@@ -111,12 +131,12 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
     }
 
     public long updateExerciseInDatabase (Exercise e, long timeStarted) {
-        // first, check if this exercise is already in the database
         ExerciseHistory eh = null;
 
         try (Cursor cursor = getReadableDatabase().rawQuery(
                 "SELECT * FROM exercises WHERE id=?",
                 new String[]{String.valueOf(e.id)})) {
+
 
             eh = cursor.moveToFirst() ? readExerciseHistory(cursor) : null;
         }
@@ -165,6 +185,33 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
             // we didn't change the exercise, as it wasn't found.
             return -1;
         }
+    }
+
+    public long saveMeasurementToDatabase (Measurement m) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = m.values();
+
+        if (m.id > 0){
+            int updated = db.update(
+                    "measurements",
+                    values,
+                    "id=?",
+                    new String[]{String.valueOf(m.id)}
+            );
+
+            if (updated > 0) {
+                Log.d("Database", "Successfully updated measurement of id " + updated + ".");
+                return m.id;
+            }
+        }
+
+        long id = db.insert("measurements", null, values);
+        if (id > 0) {
+            m.id = id;
+        }
+
+        Log.d("Database", "Successfully stored measurement of id " + id + ".");
+        return id;
     }
 
     private void jsonToList (JSONArray list, List<Exercise> output) {
@@ -248,6 +295,24 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
         return eh;
     }
 
+    private Measurement readMeasurement(Cursor cursor) {
+        Measurement mh = new Measurement();
+
+        mh.id = cursor.getLong(
+                cursor.getColumnIndexOrThrow("id"));
+        mh.bodyPart = cursor.getString(
+                cursor.getColumnIndexOrThrow("bodyPart"));
+        mh.unit = cursor.getString(
+                cursor.getColumnIndexOrThrow("unit"));
+        mh.quantity = cursor.getDouble(
+                cursor.getColumnIndexOrThrow("measurement"));
+        mh.timeTaken = cursor.getLong(
+                cursor.getColumnIndexOrThrow("timeTaken"));
+
+        return mh;
+
+    }
+
     public Workout get(long id) {
         try (Cursor cursor = getReadableDatabase().rawQuery(
                 "SELECT * FROM workouts WHERE id=?",
@@ -327,6 +392,50 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
 
         return results;
     }
+
+    public List<Measurement> getAllMeasurementsOfBodyPart(String bodyPart) {
+        List<Measurement> list = new ArrayList<>();
+
+        String search = bodyPart == null
+                ? ""
+                : bodyPart.toLowerCase(Locale.ROOT);
+
+        try (Cursor cursor = getReadableDatabase().rawQuery(
+                "SELECT * FROM measurements " +
+                        "WHERE lower(bodyPart) LIKE ? " +
+                        "ORDER BY bodyPart COLLATE NOCASE",
+                new String[]{"%" + search + "%"})) {
+
+            while(cursor.moveToNext()){
+                list.add(readMeasurement(cursor));
+            }
+        }
+        catch (Exception ignored) {
+
+        }
+
+        return list;
+    }
+
+    public List<String> getAllBodyParts() {
+        List<String> list = new ArrayList<>();
+
+        try (Cursor cursor = getReadableDatabase().rawQuery(
+                "SELECT * FROM measurements",
+                new String[]{})) {
+
+            while(cursor.moveToNext()){
+                list.add(cursor.getString(
+                        cursor.getColumnIndexOrThrow("bodyPart")));
+            }
+        }
+        catch (Exception ignored) {
+
+        }
+
+        return list;
+    }
+
 
     // delete a workout from the database
     public void delete(long id) {

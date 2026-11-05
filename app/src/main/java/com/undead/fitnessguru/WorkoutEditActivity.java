@@ -5,10 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -52,6 +54,12 @@ public class WorkoutEditActivity extends FragmentActivity {
         });
 
         w = new Workout();
+
+        String workout_name = getIntent().getStringExtra("workout_name");
+        w.name = workout_name != null ? workout_name : "New Workout";
+
+        ((TextView)findViewById(R.id.heading)).setText(w.name);
+
         db = new WorkoutDatabase(this);
 
         if (savedInstanceState != null) {
@@ -80,8 +88,27 @@ public class WorkoutEditActivity extends FragmentActivity {
         viewPager.setAdapter(pagerAdapter);
 
         findViewById(R.id.addExercise).setOnClickListener(v -> {
-            w.addExercise(new Exercise("Lorem Ipsum"));
-            refresh();
+            AlertDialog.Builder builder = new AlertDialog.Builder(WorkoutEditActivity.this);
+            builder.setTitle("Enter Exercise Name");
+
+            // Set up the workout name input
+            EditText name = new EditText(this);
+            name.setInputType(InputType.TYPE_CLASS_TEXT);
+            name.setHint("Exercise Name...");
+
+            builder.setView(name);
+
+            // Set up the buttons
+            builder.setPositiveButton("Confirm", (dialog, which) -> {
+                String newName = name.getText().toString().trim();
+                newName = newName.isEmpty() ? "New Exercise" : newName;
+
+                w.addExercise(new Exercise(newName));
+                refresh();
+            });
+            builder.setNegativeButton("Cancel", null);
+
+            builder.show();
         });
 
         findViewById(R.id.cancelWorkout).setOnClickListener(v->{
@@ -163,7 +190,6 @@ public class WorkoutEditActivity extends FragmentActivity {
     }
 
     private void saveWorkout() {
-        w.name = "Workout"; // this probably will be editable in the full app
         w.totalTime = seconds; // how long the workout took.
 
         w.exerciseList = pagerAdapter.exercises;
@@ -261,6 +287,9 @@ public class WorkoutEditActivity extends FragmentActivity {
                 int position) {
             // Set up the page's data here if necessary.
             holder.exercise = exercises.get(position);
+
+            holder.title.setText(holder.exercise.exerciseName);
+
             holder.refreshSets();
         }
         private class PageHolder extends RecyclerView.ViewHolder {

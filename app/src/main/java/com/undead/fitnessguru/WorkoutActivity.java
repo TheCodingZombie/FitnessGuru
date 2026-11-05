@@ -1,13 +1,17 @@
 package com.undead.fitnessguru;
 
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -82,11 +86,33 @@ public class WorkoutActivity extends AppCompatActivity {
         findViewById(R.id.clearSearch).setOnClickListener(v->search.setText(""));
 
         findViewById(R.id.newWorkout).setOnClickListener(v-> {
-            startActivity(new Intent(this, WorkoutEditActivity.class));
+            AlertDialog.Builder builder = new AlertDialog.Builder(WorkoutActivity.this);
+            builder.setTitle("Enter Workout Name");
+
+            // Set up the workout name input
+            EditText name = new EditText(this);
+            name.setInputType(InputType.TYPE_CLASS_TEXT);
+            name.setHint("Workout Name...");
+
+            builder.setView(name);
+
+            // Set up the buttons
+            builder.setPositiveButton("Confirm", (dialog, which) -> {
+                Intent i = new Intent(WorkoutActivity.this, WorkoutEditActivity.class);
+                i.putExtra("workout_name", name.getText().toString().trim());
+                startActivity(i);
+            });
+            builder.setNegativeButton("Cancel", null);
+
+            builder.show();
         });
 
         findViewById(R.id.goToExerciseHistory).setOnClickListener(v-> {
             startActivity(new Intent(this, ExerciseActivity.class));
+        });
+
+        findViewById(R.id.goToMeasurements).setOnClickListener(v-> {
+            startActivity(new Intent(this, MeasurementActivity.class));
         });
     }
 
