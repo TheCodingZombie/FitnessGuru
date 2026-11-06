@@ -43,20 +43,17 @@ public class ExerciseActivity extends AppCompatActivity {
         RecyclerView list = findViewById(R.id.exerciseList);
         list.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
-        adapter = new ExerciseHistoryAdapter(this, new ExerciseHistoryAdapter.Click() {
-            @Override
-            public void open(ExerciseHistory e, View shared) {
-                View listView = shared.findViewById(R.id.exerciseListView);
+        adapter = new ExerciseHistoryAdapter(this, (e, shared) -> {
+            View listView = shared.findViewById(R.id.exerciseListView);
 
-                listView.setVisibility(listView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE );
+            listView.setVisibility(listView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE );
 
-                ImageButton expandButton = shared.findViewById(R.id.expandButton);
+            ImageButton expandButton = shared.findViewById(R.id.expandButton);
 
-                expandButton.setRotation(listView.getVisibility() == View.VISIBLE ? 0 : 180 );
+            expandButton.setRotation(listView.getVisibility() == View.VISIBLE ? 0 : 180 );
 
 
-            }
-    });
+        });
         list.setAdapter(adapter);
 
         search.addTextChangedListener(
@@ -73,6 +70,10 @@ public class ExerciseActivity extends AppCompatActivity {
 
         findViewById(R.id.goToWorkoutHistory).setOnClickListener(v-> {
             startActivity(new Intent(this, WorkoutActivity.class));
+        });
+
+        findViewById(R.id.goToMeasurements).setOnClickListener(v-> {
+            startActivity(new Intent(this, MeasurementActivity.class));
         });
     }
 

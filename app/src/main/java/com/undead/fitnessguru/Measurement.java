@@ -13,7 +13,7 @@ public class Measurement {
     // the actual measurement part of the measurement
     double quantity;
 
-    String[] units = {"in", "cm"};
+    String[] units = {"in", "cm", "lb", "kg"};
 
     public Measurement() {
         unit = "in";
@@ -30,14 +30,14 @@ public class Measurement {
     }
 
     public void quantityToInches() {
-        if (unit.equals("in")) return; // already inches
+        if (!unit.equals("cm")) return;
 
         quantity *= 0.39370079; // 1 cm = 0.39370079 in
         unit = "in";
     }
 
     public void quantityToCentimeters() {
-        if (unit.equals("cm")) return; // already inches
+        if (!unit.equals("in")) return;
 
         quantity /= 0.39370079; // 1 cm = 0.39370079 in
         unit = "cm";

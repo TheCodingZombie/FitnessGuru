@@ -35,6 +35,17 @@ public class MeasurementActivity extends AppCompatActivity {
 
     MeasurementAdapter adapter;
 
+    private final List<String> bodyParts = Arrays.asList(
+            "Weight",
+            "Left Arm", "Left Forearm",
+            "Right Arm", "Right Forearm",
+            "Shoulders", "Chest", "Neck",
+            "Waist", "Hips",
+            "Glutes", "Left Thigh", "Left Calf",
+            "Right Thigh", "Right Calf");
+
+    private List<String> bodyCopy = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,8 +62,18 @@ public class MeasurementActivity extends AppCompatActivity {
         RecyclerView list = findViewById(R.id.measurementList);
         list.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
-        adapter = new MeasurementAdapter(this);
+        adapter = new MeasurementAdapter(this, shared -> {
+            View listView = shared.findViewById(R.id.measurementListView);
+
+            listView.setVisibility(listView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE );
+
+            ImageButton expandButton = shared.findViewById(R.id.expandButton);
+
+            expandButton.setRotation(listView.getVisibility() == View.VISIBLE ? 0 : 180 );
+        });
         list.setAdapter(adapter);
+
+        adapter.setBodyParts(bodyParts);
 
         findViewById(R.id.goToWorkoutHistory).setOnClickListener(v-> {
             startActivity(new Intent(this, WorkoutActivity.class));
@@ -70,9 +91,10 @@ public class MeasurementActivity extends AppCompatActivity {
             measurement.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER);
             measurement.setHint("Number...");
 
-            EditText body_part = new EditText(this);
-            body_part.setInputType(InputType.TYPE_CLASS_TEXT);
-            body_part.setHint("Enter Body Part (e.g. Bicep, Tricep, Thigh)...");
+            Spinner body_part = new Spinner(this);
+            String[] parts= bodyParts.toArray(new String[0]);
+            body_part.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,parts));
+            body_part.setSelection(0);
 
             Spinner units = new Spinner(this);
             String[] options={"in", "cm"};
@@ -90,13 +112,13 @@ public class MeasurementActivity extends AppCompatActivity {
 
             // Set up the buttons
             builder.setPositiveButton("Confirm", (dialog, which) -> {
-                if (body_part.getText().toString().trim().isEmpty() || measurement.getText().toString().trim().isEmpty()){
+                if (body_part.getSelectedItem().toString().trim().isEmpty() || measurement.getText().toString().trim().isEmpty()){
                     Toast.makeText(MeasurementActivity.this, "Fill out the form first!", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 Measurement m = new Measurement(
-                    body_part.getText().toString().trim(),
+                    body_part.getSelectedItem().toString().trim(),
                     units.getSelectedItem().toString().trim(),
                     Double.valueOf(measurement.getText().toString().trim()),
                     Calendar.getInstance().getTimeInMillis()
@@ -112,6 +134,13 @@ public class MeasurementActivity extends AppCompatActivity {
             builder.show();
         });
 
+        findViewById(R.id.startFullBody).setOnClickListener(v->{
+            createBodyweightMeasurement(true);
+        });
+
+        findViewById(R.id.doBodyWeight).setOnClickListener(v->{
+            createBodyweightMeasurement(false);
+        });
     }
 
     @Override protected void onResume(){
@@ -121,19 +150,149 @@ public class MeasurementActivity extends AppCompatActivity {
 
     void refresh(){
         if (adapter==null) return;
-
-        List<String> stringList = db.getAllBodyParts();
-
-        Log.d("stringList", stringList.toString());
-
         List<List<Measurement>> ml = new ArrayList<>();
-        for (String bp : stringList){
+        for (String bp : bodyParts){
             ml.add(db.getAllMeasurementsOfBodyPart(bp));
-            Log.d("bodyParts", db.getAllMeasurementsOfBodyPart(bp).toString());
 
         }
-
         adapter.setMeasurements(ml);
         findViewById(R.id.emptyMessage).setVisibility(adapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
     }
+
+    // if part of the full body measurement, continue to the rest of the body parts.
+    void createBodyweightMeasurement(boolean partOfFullBody){
+        AlertDialog.Builder builder = new AlertDialog.Builder(MeasurementActivity.this);
+        builder.setTitle("New Weight Measurement");
+
+        EditText measurement = new EditText(this);
+        measurement.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER);
+        measurement.setHint("Number...");
+
+        Spinner units = new Spinner(this);
+        String[] options={"lb", "kg"};
+        units.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,options));
+        units.setSelection(0);
+
+        LinearLayout l = new LinearLayout(this);
+        l.setOrientation(LinearLayout.VERTICAL);
+
+        l.addView(measurement);
+        l.addView(units);
+
+        builder.setView(l);
+
+        // Set up the buttons
+        builder.setPositiveButton((partOfFullBody ? "Next" : "Confirm"), (dialog, which) -> {
+            if (measurement.getText().toString().trim().isEmpty()){
+                Toast.makeText(MeasurementActivity.this, "Fill out the form first!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Measurement m = new Measurement(
+                    "Weight",
+                    units.getSelectedItem().toString().trim(),
+                    Double.valueOf(measurement.getText().toString().trim()),
+                    Calendar.getInstance().getTimeInMillis()
+            );
+
+            db.saveMeasurementToDatabase(m);
+
+
+
+            if (partOfFullBody) {
+                // create a copy so that the circuit can iterate through it.
+                bodyCopy = new ArrayList<>(bodyParts);
+
+                bodyCopy.removeFirst(); // remove weight.
+
+                createFullBodyMeasurement(bodyCopy.getFirst());
+            }
+            else {
+                refresh();
+                dialog.cancel();
+            }
+        });
+        builder.setNegativeButton(partOfFullBody ? "Skip" : "Cancel", (dialog, which) -> {
+            if (partOfFullBody) {
+                // create a copy so that the circuit can iterate through it.
+                bodyCopy = new ArrayList<>(bodyParts);
+
+                bodyCopy.removeFirst(); // remove weight.
+
+                createFullBodyMeasurement(bodyCopy.getFirst());
+            }
+            else {
+                refresh();
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+    void createFullBodyMeasurement(String bodyPart) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MeasurementActivity.this);
+        builder.setTitle("New Measurement for " + bodyPart);
+
+        EditText measurement = new EditText(this);
+        measurement.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER);
+        measurement.setHint("Number...");
+
+        Spinner units = new Spinner(this);
+        String[] options={"in", "cm"};
+        units.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,options));
+        units.setSelection(0);
+
+        LinearLayout l = new LinearLayout(this);
+        l.setOrientation(LinearLayout.VERTICAL);
+
+        l.addView(measurement);
+        l.addView(units);
+
+        builder.setView(l);
+
+        // Set up the buttons
+        builder.setPositiveButton("Next", (dialog, which) -> {
+            if (measurement.getText().toString().trim().isEmpty()){
+                Toast.makeText(MeasurementActivity.this, "Fill out the form first!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Measurement m = new Measurement(
+                    bodyPart,
+                    units.getSelectedItem().toString().trim(),
+                    Double.valueOf(measurement.getText().toString().trim()),
+                    Calendar.getInstance().getTimeInMillis()
+            );
+
+            db.saveMeasurementToDatabase(m);
+
+            // Then we iterate through the list until it is empty.
+            bodyCopy.removeFirst();
+            if (!bodyCopy.isEmpty()){
+                createFullBodyMeasurement(bodyCopy.getFirst());
+            }
+            else {
+                // finished the list.
+                Toast.makeText(MeasurementActivity.this, "Successfully finished a full body measurement.", Toast.LENGTH_LONG).show();
+                refresh();
+                dialog.cancel();
+            }
+        });
+        builder.setNegativeButton("Skip", (dialog, which) -> {
+            bodyCopy.removeFirst();
+            if (!bodyCopy.isEmpty()){
+                createFullBodyMeasurement(bodyCopy.getFirst());
+            }
+            else {
+                // finished the list.
+                Toast.makeText(MeasurementActivity.this, "Successfully finished a full body measurement.", Toast.LENGTH_LONG).show();
+                refresh();
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
 }

@@ -22,16 +22,24 @@ import java.util.Date;
 import java.util.List;
 
 public class MeasurementAdapter extends RecyclerView.Adapter<MeasurementAdapter.MeasurementViewHolder> {
+
+    public interface Click {
+        void open(View shared);
+    }
     private final Context context;
+    private final Click click;
     private List<List<Measurement>> measurements = new ArrayList<>();
+    private List<String> bodyParts = new ArrayList<>();
 
     // Constructor accepts the workout list and a workout callback.
-    public MeasurementAdapter(Context c) { context = c; }
+    public MeasurementAdapter(Context c, Click l) { context = c; click = l; }
     public void setMeasurements(List<List<Measurement>> ml) {
         measurements = new ArrayList<>(ml);
-
-        Log.d("measurements", measurements.toString());
         notifyDataSetChanged();
+    }
+
+    public void setBodyParts(List<String> sl) {
+        bodyParts = new ArrayList<>(sl);
     }
 
     @NonNull
@@ -49,10 +57,9 @@ public class MeasurementAdapter extends RecyclerView.Adapter<MeasurementAdapter.
             MeasurementViewHolder holder, int position
     ){
         List<Measurement> m = measurements.get(position);
-        Log.d("Measurement", m.getFirst().bodyPart);
 
         holder.measurements = m;
-        holder.bodyPart = holder.measurements.getFirst().bodyPart;
+        holder.bodyPart = bodyParts.get(position);
 
         holder.title.setText(holder.bodyPart);
 
@@ -62,37 +69,35 @@ public class MeasurementAdapter extends RecyclerView.Adapter<MeasurementAdapter.
             series.appendData(new DataPoint(new Date(M.timeTaken / 1000L), M.quantity), true, 99);
         }
 
-        //holder.exerciseList.setText(sb.toString());
+        if (!holder.measurements.isEmpty()) {
+            holder.pbDisplay.setText(
+                    "Current Measurement: " + holder.measurements.getLast().quantity + " " + holder.measurements.getLast().unit
+            );
 
-        holder.pbDisplay.setText("Current Measurement: " + holder.measurements.getFirst().quantity + " " + holder.measurements.getFirst().unit);
+            holder.graphView.setTitle("Body Part History");
 
-        holder.graphView.setTitle("Body Part History");
+            holder.graphView.setTitleTextSize(40);
 
-        holder.graphView.setTitleTextSize(40);
+            holder.graphView.addSeries(series);
 
-        holder.graphView.addSeries(series);
+            series.setDrawBackground(true);
+            series.setDrawDataPoints(true);
 
-        series.setDrawBackground(true);
-        series.setDrawDataPoints(true);
+            holder.graphView.getGridLabelRenderer().setHorizontalLabelsAngle(90);
+            holder.graphView.getGridLabelRenderer().setNumHorizontalLabels(m.size());
+            holder.graphView.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(context));
 
-        holder.graphView.getGridLabelRenderer().setHorizontalLabelsAngle(90);
-        holder.graphView.getGridLabelRenderer().setNumHorizontalLabels(m.size());
-        holder.graphView.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(context));
+            holder.graphView.getViewport().setXAxisBoundsManual(true);
+            holder.graphView.getViewport().setYAxisBoundsManual(true);
+            holder.graphView.getViewport().setMinX(m.getFirst().timeTaken / 1000L);
+            holder.graphView.getViewport().setMaxX(m.getLast().timeTaken / 1000L);
+            holder.graphView.getViewport().setMinY(0);
+            holder.graphView.getViewport().setMaxY(holder.getMax());
+            holder.graphView.getGridLabelRenderer().setHumanRounding(false);
+        }
 
-        holder.graphView.getViewport().setXAxisBoundsManual(true);
-        holder.graphView.getViewport().setMinX(m.getFirst().timeTaken / 1000L);
-        holder.graphView.getViewport().setMaxX(m.getLast().timeTaken / 1000L);
-        holder.graphView.getGridLabelRenderer().setHumanRounding(false);
-
-        holder.expandButton.setOnClickListener(v-> {
-            View listView = v.getRootView().findViewById(R.id.measurementListView);
-
-            listView.setVisibility(listView.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE );
-
-            ImageButton expandButton = v.getRootView().findViewById(R.id.expandButton);
-
-            expandButton.setRotation(listView.getVisibility() == View.VISIBLE ? 0 : 180 );
-        });
+        holder.expandButton.setOnClickListener(v-> click.open(holder.itemView));
+        holder.expandButton.setVisibility(holder.measurements.isEmpty() ? View.GONE : View.VISIBLE);
 
     }
 
@@ -120,6 +125,16 @@ public class MeasurementAdapter extends RecyclerView.Adapter<MeasurementAdapter.
             expandButton = v.findViewById(R.id.expandButton);
             pbDisplay = v.findViewById(R.id.measurementList);
             graphView = v.findViewById(R.id.measurementGraph);
+        }
+
+        double getMax() {
+            double res = -999;
+
+            for (Measurement m : measurements){
+                if (m.quantity > res) res = m.quantity;
+            }
+
+            return res;
         }
     }
 

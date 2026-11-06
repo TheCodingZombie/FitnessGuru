@@ -15,20 +15,21 @@
         android:paddingTop="8dp"
         android:paddingBottom="16dp"/>
 
+    <Button
+        android:id="@+id/startFullBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:text="+ Start a Full Body Measurement"
+        android:layout_margin="4dp"/>
+
     <LinearLayout
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <Button
-            android:id="@+id/startFullBody"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:text="+ Start a Full Body Measurement"
-            android:layout_margin="4dp"/>
+
 
         <Button
             android:id="@+id/addBodyPart"
@@ -37,6 +38,15 @@
             android:layout_height="wrap_content"
             android:minHeight="48dp"
             android:text="+ Add a Measurement"
+            android:layout_margin="4dp"/>
+
+        <Button
+            android:id="@+id/doBodyWeight"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="+ Add a Body Weight Measurement"
             android:layout_margin="4dp"/>
 
     </LinearLayout>

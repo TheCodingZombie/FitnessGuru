@@ -22,18 +22,17 @@ Package: `com.undead.fitnessguru`.
 - You can also add a copy of the bottom set to the bottom.
 - Name workouts and exercises
 - Measurements Screen (allows you to note your measurements and then see a history of each body part)
-
-## Feature Plans
-- Measurements allowing you to set a whole suite of body parts, then allowing you to do a whole body measurement
+  - Measurements allow for a full body measurement (basically every possible body part)
   - Body weight units as well (restrict it to just if the user is adding a body weight measurement, since
     it wouldn't make much sense if you measured how much your bicep weighed)
-  - Instead of being freeform, there should be a set list of body parts that the user can set for the measurement.
+
+## Feature Plans
 - Goals
   - Perhaps the measurement screen could also allow you to set a goal for measurements, which is automatically pinned to the top.
   - Perhaps the exercise screen could have an additional section that lets you set a goal for individual exercises as well.
   - Perhaps there could be a popup when your set date for a goal has been reached and lets you know that you should take measurements.
 - Create a preset workout, allowing you to have a bunch of exercises ready for you to fill out.
-  - Also, a button in addition to the start workout button that allows you to choose a preset workout.
+  - Also, a button in addition to the start workout button that  allows you to choose a preset workout.
   - Store preset workouts in the database (and then retrieve them all into a dropdown menu?)
 - Preset Exercises as well?
   - Would probably just be a list of exercise names created by the programmer
