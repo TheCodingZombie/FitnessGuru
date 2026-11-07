@@ -19,7 +19,7 @@ import java.util.Locale;
 public class WorkoutDatabase extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "workouts.db";
-    private static final int DB_VERSION = 5;
+    private static final int DB_VERSION = 6;
 
     public WorkoutDatabase(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -50,6 +50,13 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
                         "unit TEXT, " +
                         "measurement DOUBLE, " +
                         "timeTaken INTEGER)"
+        );
+
+        db.execSQL(
+                "CREATE TABLE presets (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        "name TEXT, " +
+                        "exerciseList TEXT)"
         );
     }
 
@@ -101,6 +108,15 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
             );
         }
 
+        if (newVersion >= 6 && oldVersion <= 5){
+            db.execSQL(
+                    "CREATE TABLE presets (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            "name TEXT, " +
+                            "exerciseList TEXT)"
+            );
+        }
+
     }
 
     public long saveWorkoutToDatabase (Workout w){
@@ -127,6 +143,33 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
         }
 
         Log.d("Database", "Successfully stored workout of id " + id + ".");
+        return id;
+    }
+
+    public long savePresetToDatabase (Workout w){
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = w.presetValues();
+
+        if (w.id > 0){
+            int updated = db.update(
+                    "presets",
+                    values,
+                    "id=?",
+                    new String[]{String.valueOf(w.id)}
+            );
+
+            if (updated > 0) {
+                Log.d("Database", "Successfully updated preset of id " + updated + ".");
+                return w.id;
+            }
+        }
+
+        long id = db.insert("presets", null, values);
+        if (id > 0) {
+            w.id = id;
+        }
+
+        Log.d("Database", "Successfully stored preset of id " + id + ".");
         return id;
     }
 
@@ -280,6 +323,29 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
         return w;
     }
 
+    private Workout readPreset(Cursor cursor) {
+        Workout w = new Workout();
+        w.id = cursor.getLong(
+                cursor.getColumnIndexOrThrow("id"));
+        w.name = cursor.getString(
+                cursor.getColumnIndexOrThrow("name"));
+
+        String json = cursor.getString(
+                cursor.getColumnIndexOrThrow("exerciseList"));
+
+        if (json != null && !json.isEmpty()) {
+            try {
+                JSONArray eList = new JSONArray(json);
+
+                jsonToList(eList, w.exerciseList);
+            } catch (Exception e) {
+                Log.e("WorkoutDatabase", "Could not parse details for workout " + w.id + "\n with the following error: " + e.toString());
+            }
+        }
+
+        return w;
+    }
+
     private ExerciseHistory readExerciseHistory(Cursor cursor) {
         ExerciseHistory eh = new ExerciseHistory();
 
@@ -337,6 +403,27 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
 
             while (cursor.moveToNext()) {
                 results.add(read(cursor));
+            }
+        }
+
+        return results;
+    }
+
+    public ArrayList<Workout> searchPresets(String query) {
+        ArrayList<Workout> results = new ArrayList<>();
+
+        String search = query == null
+                ? ""
+                : query.toLowerCase(Locale.ROOT);
+
+        try (Cursor cursor = getReadableDatabase().rawQuery(
+                "SELECT * FROM presets " +
+                        "WHERE lower(name) LIKE ? " +
+                        "ORDER BY name COLLATE NOCASE",
+                new String[]{"%" + search + "%"})) {
+
+            while (cursor.moveToNext()) {
+                results.add(readPreset(cursor));
             }
         }
 
@@ -441,6 +528,15 @@ public class WorkoutDatabase extends SQLiteOpenHelper {
     public void delete(long id) {
         getWritableDatabase().delete(
                 "workouts",
+                "id=?",
+                new String[]{ String.valueOf(id) }
+        );
+    }
+
+    // delete a preset from the database
+    public void deletePreset(long id) {
+        getWritableDatabase().delete(
+                "presets",
                 "id=?",
                 new String[]{ String.valueOf(id) }
         );

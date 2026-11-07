@@ -75,13 +75,15 @@ public class MeasurementActivity extends AppCompatActivity {
 
         adapter.setBodyParts(bodyParts);
 
-        findViewById(R.id.goToWorkoutHistory).setOnClickListener(v-> {
-            startActivity(new Intent(this, WorkoutActivity.class));
-        });
+        if (savedInstanceState == null) {
+            Bundle bundle = new Bundle();
+            bundle.putString("activity_name", this.getClass().getSimpleName());
 
-        findViewById(R.id.goToExerciseHistory).setOnClickListener(v-> {
-            startActivity(new Intent(this, ExerciseActivity.class));
-        });
+            getSupportFragmentManager().beginTransaction()
+                    .setReorderingAllowed(true)
+                    .add(R.id.bottomBar, BottomNavFragment.class, bundle)
+                    .commit();
+        }
 
         findViewById(R.id.addBodyPart).setOnClickListener(v->{
             AlertDialog.Builder builder = new AlertDialog.Builder(MeasurementActivity.this);

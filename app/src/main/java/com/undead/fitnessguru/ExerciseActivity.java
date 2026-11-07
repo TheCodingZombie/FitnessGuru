@@ -68,13 +68,15 @@ public class ExerciseActivity extends AppCompatActivity {
 
         findViewById(R.id.clearSearch).setOnClickListener(v->search.setText(""));
 
-        findViewById(R.id.goToWorkoutHistory).setOnClickListener(v-> {
-            startActivity(new Intent(this, WorkoutActivity.class));
-        });
+        if (savedInstanceState == null) {
+            Bundle bundle = new Bundle();
+            bundle.putString("activity_name", this.getClass().getSimpleName());
 
-        findViewById(R.id.goToMeasurements).setOnClickListener(v-> {
-            startActivity(new Intent(this, MeasurementActivity.class));
-        });
+            getSupportFragmentManager().beginTransaction()
+                    .setReorderingAllowed(true)
+                    .add(R.id.bottomBar, BottomNavFragment.class, bundle)
+                    .commit();
+        }
     }
 
     @Override protected void onResume(){

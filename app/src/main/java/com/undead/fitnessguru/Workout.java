@@ -67,4 +67,22 @@ public class Workout {
 
         return values;
     }
+
+    // get the version of a workout meant for a preset.
+    // yes this is just a subset of values()
+    // but i don't want to risk any errors.
+    public ContentValues presetValues() {
+        ContentValues values = new ContentValues();
+
+        values.put("name", name);
+
+        JSONArray exercises = new JSONArray();
+        for (Exercise e: exerciseList) {
+            exercises.put(e.detailsToJSON());
+        }
+        values.put("exerciseList", exercises.toString());
+
+        return values;
+    }
+
 }

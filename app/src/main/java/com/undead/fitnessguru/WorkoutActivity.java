@@ -107,13 +107,15 @@ public class WorkoutActivity extends AppCompatActivity {
             builder.show();
         });
 
-        findViewById(R.id.goToExerciseHistory).setOnClickListener(v-> {
-            startActivity(new Intent(this, ExerciseActivity.class));
-        });
+        if (savedInstanceState == null) {
+            Bundle bundle = new Bundle();
+            bundle.putString("activity_name", this.getClass().getSimpleName());
 
-        findViewById(R.id.goToMeasurements).setOnClickListener(v-> {
-            startActivity(new Intent(this, MeasurementActivity.class));
-        });
+            getSupportFragmentManager().beginTransaction()
+                    .setReorderingAllowed(true)
+                    .add(R.id.bottomBar, BottomNavFragment.class, bundle)
+                    .commit();
+        }
     }
 
     @Override protected void onResume(){
@@ -124,7 +126,7 @@ public class WorkoutActivity extends AppCompatActivity {
     void refresh(){
         if (adapter==null) return;
 
-        adapter.setWorkouts(db.getAll());
+        adapter.setWorkouts(db.search(search.getText().toString().trim()));
         findViewById(R.id.emptyMessage).setVisibility(adapter.getItemCount() == 0 ? View.VISIBLE : View.GONE);
     }
 }

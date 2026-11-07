@@ -28,7 +28,7 @@ Package: `com.undead.fitnessguru`.
 
 ## Feature Plans
 - Goals
-  - Perhaps the measurement screen could also allow you to set a goal for measurements, which is automatically pinned to the top.
+  - Perhaps the measurement screen could also allow you to set a goal for each body part, which is automatically pinned to the top.
   - Perhaps the exercise screen could have an additional section that lets you set a goal for individual exercises as well.
   - Perhaps there could be a popup when your set date for a goal has been reached and lets you know that you should take measurements.
 - Create a preset workout, allowing you to have a bunch of exercises ready for you to fill out.

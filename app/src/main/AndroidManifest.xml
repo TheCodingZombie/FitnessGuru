@@ -14,6 +14,7 @@
         <activity android:name=".WorkoutEditActivity" android:exported="false"/>
         <activity android:name=".ExerciseActivity" android:exported="false"/>
         <activity android:name=".MeasurementActivity" android:exported="false"/>
+        <activity android:name=".PresetWorkoutActivity" android:exported="false"/>
 
         <activity
             android:name=".WorkoutActivity"
